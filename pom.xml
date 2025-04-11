@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Project Coordinates -->
+    <groupId>io.github.zachary62</groupId> <!-- Convention based on author's GitHub -->
+    <artifactId>PocketFlow</artifactId>    <!-- Project artifact name -->
+    <version>1.0-SNAPSHOT</version>      <!-- Initial development version -->
+    <packaging>jar</packaging>              <!-- Standard packaging for a library -->
+
+    <!-- Project Information -->
+    <name>PocketFlow</name>
+    <description>Pocket Flow: A minimalist LLM framework. Let Agents build Agents!</description>
+    <url>https://github.com/The-Pocket/PocketFlow-Java</url>
+
+    <!-- License Information -->
+    <licenses>
+      <license>
+        <name>MIT License</name>
+        <url>http://www.opensource.org/licenses/mit-license.php</url>
+        <distribution>repo</distribution>
+      </license>
+    </licenses>
+
+    <!-- Developer Information -->
+    <developers>
+      <developer>
+        <id>zachary62</id>
+        <name>Zachary Huang</name>
+        <url>https://github.com/zachary62</url>
+      </developer>
+    </developers>
+
+    <!-- Source Control Management -->
+    <scm>
+      <connection>scm:git:git://github.com/The-Pocket/PocketFlow-Java.git</connection>
+      <developerConnection>scm:git:ssh://git@github.com/The-Pocket/PocketFlow-Java.git</developerConnection>
+      <url>https://github.com/The-Pocket/PocketFlow-Java/tree/main</url>
+      <tag>HEAD</tag>
+    </scm>
+
+    <!-- Build Properties -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source> <!-- Java 11 as a baseline -->
+        <maven.compiler.target>11</maven.compiler.target>
+        <!-- Dependency Versions -->
+        <junit.jupiter.version>5.9.2</junit.jupiter.version> <!-- Use a recent JUnit 5 version -->
+        <slf4j.version>2.0.7</slf4j.version>           <!-- Use a recent SLF4J version (v2.x) -->
+    </properties>
+
+    <!-- Dependencies -->
+    <dependencies>
+        <!-- Logging Facade (Optional but recommended for libraries) -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- SLF4J Simple Binding (For basic console logging during tests/dev) -->
+        <!-- Scope 'test' means it won't be a transitive dependency for users -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope> <!-- Or runtime if you want simple logging always available -->
+        </dependency>
+
+        <!-- Testing -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- Build Configuration -->
+    <build>
+        <plugins>
+            <!-- Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version> <!-- Use a recent version -->
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+            <!-- Surefire Plugin (for running tests) -->
+             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0</version> <!-- Use a recent version compatible with JUnit 5 -->
+            </plugin>
+            <!-- Optional: Source JAR Plugin (Good practice for libraries) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Optional: Javadoc JAR Plugin (Good practice for libraries) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.5.0</version>
+                 <configuration>
+                    <!-- Add config here if needed, e.g., handle Java 11+ module issues if they arise -->
+                    <source>${maven.compiler.source}</source>
+                 </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
