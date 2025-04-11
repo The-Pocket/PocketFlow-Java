@@ -74,3 +74,4 @@ htmlcov/
 
 test.ipynb
 .pytest_cache/
+settings.xml
