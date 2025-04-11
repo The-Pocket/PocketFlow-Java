@@ -120,4 +120,4 @@ Please feel free to submit pull requests or open issues for discussion.
 
 ## License
 
-[MIT License](LICENSE) (or specify the actual license used)
+[MIT License](LICENSE)
