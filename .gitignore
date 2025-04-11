@@ -1,4 +1,71 @@
-# OS generated files
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE-specific files
+# Eclipse
+.settings/
+.classpath
+.project
+.metadata/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+.code-workspace
+
+# OS-specific files
 .DS_Store
 .DS_Store?
 ._*
@@ -6,71 +73,6 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
-
-
-# IDE specific files
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# Node
-node_modules/
-npm-debug.log
-yarn-debug.log
-yarn-error.log
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-venv/
-ENV/
-
-# Logs and databases
-*.log
-*.sql
-*.sqlite
-
-# Build output
-dist/
-build/
-out/
-
-# Coverage reports
-coverage/
-.coverage
-.coverage.*
-htmlcov/
-
-# Misc
-*.bak
-*.tmp
-*.temp
-
 
 test.ipynb
 .pytest_cache/
