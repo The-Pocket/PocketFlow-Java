@@ -1,4 +1,4 @@
-package io.github.the_pocket; 
+package io.github.the_pocket;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,27 +8,20 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * PocketFlow - A simple, synchronous workflow library for Java in a single file.
+ */
 public final class PocketFlow {
 
-    // Private constructor to prevent instantiation of the utility class
     private PocketFlow() {}
 
-    // Simple Warning Logger (Consider replacing with SLF4j API if adding dependencies)
     private static void logWarn(String message) {
         System.err.println("WARN: PocketFlow - " + message);
     }
 
-    /**
-     * Custom RuntimeException for PocketFlow specific errors.
-     */
     public static class PocketFlowException extends RuntimeException {
-        public PocketFlowException(String message) {
-            super(message);
-        }
-
-        public PocketFlowException(String message, Throwable cause) {
-            super(message, cause);
-        }
+        public PocketFlowException(String message) { super(message); }
+        public PocketFlowException(String message, Throwable cause) { super(message, cause); }
     }
 
     /**
@@ -36,25 +29,23 @@ public final class PocketFlow {
      *
      * @param <P> Type of the result from the prep phase.
      * @param <E> Type of the result from the exec phase.
-     * @param <R> Type of the final result/action returned by the node's run cycle (often String).
+     * The return type of post/run is always String (or null for default action).
      */
-    public static abstract class BaseNode<P, E, R> {
+    public static abstract class BaseNode<P, E> {
         protected Map<String, Object> params = new HashMap<>();
-        protected final Map<String, BaseNode<?, ?, ?>> successors = new HashMap<>();
+        protected final Map<String, BaseNode<?, ?>> successors = new HashMap<>();
         public static final String DEFAULT_ACTION = "default";
 
-        public BaseNode<P, E, R> setParams(Map<String, Object> params) {
+        public BaseNode<P, E> setParams(Map<String, Object> params) {
             this.params = params != null ? new HashMap<>(params) : new HashMap<>();
             return this;
         }
 
-        /** Connects this node to the next using the default action ("default"). */
-        public <NEXT_P, NEXT_E, NEXT_R> BaseNode<NEXT_P, NEXT_E, NEXT_R> next(BaseNode<NEXT_P, NEXT_E, NEXT_R> node) {
+        public <NEXT_P, NEXT_E> BaseNode<NEXT_P, NEXT_E> next(BaseNode<NEXT_P, NEXT_E> node) {
             return next(node, DEFAULT_ACTION);
         }
 
-        /** Connects this node to the next using a specific action string. */
-        public <NEXT_P, NEXT_E, NEXT_R> BaseNode<NEXT_P, NEXT_E, NEXT_R> next(BaseNode<NEXT_P, NEXT_E, NEXT_R> node, String action) {
+        public <NEXT_P, NEXT_E> BaseNode<NEXT_P, NEXT_E> next(BaseNode<NEXT_P, NEXT_E> node, String action) {
             Objects.requireNonNull(node, "Successor node cannot be null");
             Objects.requireNonNull(action, "Action cannot be null");
             if (this.successors.containsKey(action)) {
@@ -64,30 +55,29 @@ public final class PocketFlow {
             return node;
         }
 
-        // --- Lifecycle Methods (to be implemented by concrete nodes) ---
         public P prep(Map<String, Object> sharedContext) { return null; }
         public abstract E exec(P prepResult);
-        public R post(Map<String, Object> sharedContext, P prepResult, E execResult) { return null; }
+        /** Post method MUST return a String action, or null for the default action. */
+        public String post(Map<String, Object> sharedContext, P prepResult, E execResult) { return null; }
 
-        // --- Internal Execution Logic ---
         protected E internalExec(P prepResult) { return exec(prepResult); }
 
-        protected R runLifecycle(Map<String, Object> sharedContext) {
+        protected String internalRun(Map<String, Object> sharedContext) {
             P prepRes = prep(sharedContext);
             E execRes = internalExec(prepRes);
             return post(sharedContext, prepRes, execRes);
         }
 
-        public R run(Map<String, Object> sharedContext) {
+        public String run(Map<String, Object> sharedContext) {
             if (!successors.isEmpty()) {
                 logWarn("Node " + getClass().getSimpleName() + " has successors, but run() was called. Successors won't be executed. Use Flow.");
             }
-            return runLifecycle(sharedContext);
+            return internalRun(sharedContext);
         }
 
-        protected BaseNode<?, ?, ?> getNextNode(R action) {
-            String actionKey = (action != null) ? action.toString() : DEFAULT_ACTION;
-            BaseNode<?, ?, ?> nextNode = successors.get(actionKey);
+        protected BaseNode<?, ?> getNextNode(String action) {
+            String actionKey = (action != null) ? action : DEFAULT_ACTION;
+            BaseNode<?, ?> nextNode = successors.get(actionKey);
             if (nextNode == null && !successors.isEmpty() && !successors.containsKey(actionKey)) {
                  logWarn("Flow might end: Action '" + actionKey + "' not found in successors "
                          + successors.keySet() + " of node " + this.getClass().getSimpleName());
@@ -99,7 +89,7 @@ public final class PocketFlow {
     /**
      * A synchronous node with built-in retry capabilities.
      */
-    public static abstract class Node<P, E, R> extends BaseNode<P, E, R> {
+    public static abstract class Node<P, E> extends BaseNode<P, E> {
         protected final int maxRetries;
         protected final long waitMillis;
         protected int currentRetry = 0;
@@ -141,7 +131,7 @@ public final class PocketFlow {
     /**
      * A synchronous node that processes a list of items individually.
      */
-    public static abstract class BatchNode<IN_ITEM, OUT_ITEM, R> extends Node<List<IN_ITEM>, List<OUT_ITEM>, R> {
+    public static abstract class BatchNode<IN_ITEM, OUT_ITEM> extends Node<List<IN_ITEM>, List<OUT_ITEM>> {
         public BatchNode() { super(); }
         public BatchNode(int maxRetries, long waitMillis) { super(maxRetries, waitMillis); }
 
@@ -185,56 +175,63 @@ public final class PocketFlow {
     /**
      * Orchestrates the execution of a sequence of connected nodes.
      */
-    public static class Flow<R_ACTION> extends BaseNode<Void, R_ACTION, R_ACTION> {
-        protected BaseNode<?, ?, ?> startNode;
+    public static class Flow extends BaseNode<Void, String> {
+        protected BaseNode<?, ?> startNode;
 
         public Flow() { this(null); }
-        public Flow(BaseNode<?, ?, ?> startNode) { this.start(startNode); }
+        public Flow(BaseNode<?, ?> startNode) { this.start(startNode); }
 
-        public <SN_P, SN_E, SN_R> BaseNode<SN_P, SN_E, SN_R> start(BaseNode<SN_P, SN_E, SN_R> startNode) {
+        public <SN_P, SN_E> BaseNode<SN_P, SN_E> start(BaseNode<SN_P, SN_E> startNode) {
             this.startNode = Objects.requireNonNull(startNode, "Start node cannot be null");
             return startNode;
         }
 
-        @Override public final R_ACTION exec(Void prepResult) { throw new UnsupportedOperationException("Flow.exec() is internal."); }
+        @Override public final String exec(Void prepResult) {
+            throw new UnsupportedOperationException("Flow.exec() is internal and should not be called directly.");
+        }
 
-        @SuppressWarnings({"unchecked", "rawtypes"})
-        protected R_ACTION orchestrate(Map<String, Object> sharedContext, Map<String, Object> initialParams) {
+
+        @SuppressWarnings({"unchecked", "rawtypes"}) // Raw types needed for successors map
+        protected String orchestrate(Map<String, Object> sharedContext, Map<String, Object> initialParams) {
             if (startNode == null) { logWarn("Flow started with no start node."); return null; }
-            BaseNode currentNode = this.startNode;
-            R_ACTION lastAction = null;
+            BaseNode<?, ?> currentNode = this.startNode;
+            String lastAction = null;
             Map<String, Object> currentParams = new HashMap<>(this.params);
             if (initialParams != null) { currentParams.putAll(initialParams); }
             while (currentNode != null) {
                 currentNode.setParams(currentParams);
-                lastAction = (R_ACTION) currentNode.runLifecycle(sharedContext);
+                lastAction = (String) ((BaseNode)currentNode).internalRun(sharedContext);
                 currentNode = currentNode.getNextNode(lastAction);
             }
             return lastAction;
         }
 
         @Override
-        protected R_ACTION runLifecycle(Map<String, Object> sharedContext) {
+        protected String internalRun(Map<String, Object> sharedContext) {
             Void prepRes = prep(sharedContext);
-            R_ACTION orchRes = orchestrate(sharedContext, null);
+            String orchRes = orchestrate(sharedContext, null);
             return post(sharedContext, prepRes, orchRes);
         }
 
-        @Override public R_ACTION post(Map<String, Object> sharedContext, Void prepResult, R_ACTION execResult) { return execResult; }
+        /** Post method for the Flow itself. Default returns the last action from orchestration. */
+        @Override public String post(Map<String, Object> sharedContext, Void prepResult, String execResult) {
+            return execResult;
+        }
     }
 
     /**
      * A flow that runs its entire sequence for each parameter set from `prepBatch`.
      */
-    public static abstract class BatchFlow<R_ACTION> extends Flow<R_ACTION> {
+    public static abstract class BatchFlow extends Flow {
         public BatchFlow() { super(); }
-        public BatchFlow(BaseNode<?, ?, ?> startNode) { super(startNode); }
+        public BatchFlow(BaseNode<?, ?> startNode) { super(startNode); }
 
         public abstract List<Map<String, Object>> prepBatch(Map<String, Object> sharedContext);
-        public abstract R_ACTION postBatch(Map<String, Object> sharedContext, List<Map<String, Object>> batchPrepResult);
+        /** Post method MUST return a String action, or null for the default action. */
+        public abstract String postBatch(Map<String, Object> sharedContext, List<Map<String, Object>> batchPrepResult);
 
         @Override
-        protected R_ACTION runLifecycle(Map<String, Object> sharedContext) {
+        protected String internalRun(Map<String, Object> sharedContext) {
             List<Map<String, Object>> batchParamsList = this.prepBatch(sharedContext);
             if (batchParamsList == null) { batchParamsList = Collections.emptyList(); }
             for (Map<String, Object> batchParams : batchParamsList) {
@@ -244,6 +241,11 @@ public final class PocketFlow {
             }
             return postBatch(sharedContext, batchParamsList);
         }
+
+         @Override
+         public final String post(Map<String, Object> sharedContext, Void prepResult, String execResult) {
+             throw new UnsupportedOperationException("Use postBatch for BatchFlow, not post.");
+         }
     }
 
-} // End of PocketFlow class
+}
